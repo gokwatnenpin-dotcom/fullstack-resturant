@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BistroFlow — Restaurant Management System</title>
+  <link rel="stylesheet" href="style.css?v=3">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+  <!-- Header / Navigation -->
+  <header class="app-header">
+    <div class="header-container">
+      <div class="brand">
+        <span class="brand-icon">
+          <svg class="icon icon-lg" viewBox="0 0 24 24" fill="none" stroke="#000000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M18 2v20M14 2v5a3 3 0 0 0 6 0V2M6 2v20M3 2v6a3 3 0 0 0 6 0V2"/>
+          </svg>
+        </span>
+        <div>
+          <h1 class="brand-title">BistroFlow</h1>
+          <p class="brand-subtitle">Restaurant Management System (Express + PostgreSQL)</p>
+        </div>
+      </div>
+
+      <nav class="nav-tabs" id="navTabs">
+        <button class="nav-tab active" data-tab="tab-menu">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect width="18" height="18" x="3" y="3" rx="2"/><path d="M7 8h10M7 12h10M7 16h6"/>
+          </svg>
+          Menu & Order
+        </button>
+        <button class="nav-tab" data-tab="tab-orders" data-roles="admin,staff">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect width="8" height="4" x="8" y="2" rx="1" ry="1"/><path d="m9 14 2 2 4-4"/>
+          </svg>
+          Order Management
+        </button>
+        <button class="nav-tab" data-tab="tab-manage-menu" data-roles="admin,staff">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect width="7" height="7" x="3" y="3" rx="1"/><rect width="7" height="7" x="14" y="3" rx="1"/><rect width="7" height="7" x="14" y="14" rx="1"/><rect width="7" height="7" x="3" y="14" rx="1"/>
+          </svg>
+          Manage Menu
+        </button>
+        <button class="nav-tab" data-tab="tab-categories" data-roles="admin,staff">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-.82-1.2A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2Z"/>
+          </svg>
+          Categories
+        </button>
+        <button class="nav-tab" data-tab="tab-users" data-roles="admin,staff">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+          </svg>
+          Customers
+        </button>
+      </nav>
+      <div id="userArea" style="display:flex; align-items:center; gap:0.6rem; margin-top:0.4rem">
+        <span id="userChip" style="font-size:0.85rem; color:var(--text-muted)"></span>
+        <button id="logoutBtn" class="btn-secondary" style="padding:0.3rem 0.8rem">Logout</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Notification Banner -->
+  <div id="toast" class="toast"></div>
+
+  <!-- Main Content Container -->
+  <main class="main-container">
+
+    <!-- ==================== TAB 1: MENU & ORDER CREATION ==================== -->
+    <section id="tab-menu" class="tab-pane active">
+      <div class="menu-order-grid">
+        <!-- Left: Menu Explorer -->
+        <div class="menu-panel">
+          <div class="panel-header">
+            <h2>Explore Menu</h2>
+            <div class="search-box">
+              <input type="text" id="menuSearch" placeholder="Search dish or ingredient..." />
+            </div>
+          </div>
+
+          <!-- Category filter pills -->
+          <div class="category-pills" id="categoryPills">
+            <button class="pill active" data-cat="all">All Dishes</button>
+            <!-- Loaded dynamically -->
+          </div>
+
+          <!-- Menu items grid -->
+          <div class="menu-items-grid" id="menuItemsList">
+            <div class="loading-state">Loading menu from PostgreSQL...</div>
+          </div>
+        </div>
+
+        <!-- Right: Current Order Cart -->
+        <aside class="cart-panel">
+          <div class="cart-card">
+            <div class="cart-header">
+              <h3>
+                <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="#000000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/>
+                </svg>
+                Current Order
+              </h3>
+              <button class="btn-text" id="clearCartBtn">Clear</button>
+            </div>
+
+            <div class="cart-body">
+              <!-- Customer selection -->
+              <div class="form-group">
+                <label for="orderCustomerSelect">Customer *</label>
+                <div class="input-with-action">
+                  <select id="orderCustomerSelect" required>
+                    <option value="">Select Customer...</option>
+                  </select>
+                  <button type="button" class="btn-small" id="quickAddUserBtn" title="New Customer">+</button>
+                </div>
+              </div>
+
+              <!-- Table Number & Notes -->
+              <div class="form-row">
+                <div class="form-group flex-1">
+                  <label for="orderTableNumber">Table #</label>
+                  <input type="number" id="orderTableNumber" placeholder="e.g. 4" min="1" max="99" />
+                </div>
+                <div class="form-group flex-2">
+                  <label for="orderNotes">Special Notes</label>
+                  <input type="text" id="orderNotes" placeholder="e.g. Extra spicy, no nuts" />
+                </div>
+              </div>
+
+              <!-- Cart Items List -->
+              <div class="cart-items" id="cartItemsList">
+                <div class="empty-cart-state">
+                  <p>Your order is empty.</p>
+                  <small>Select dishes from the menu to add them to this order.</small>
+                </div>
+              </div>
+
+              <!-- Cart Summary -->
+              <div class="cart-summary">
+                <div class="summary-line">
+                  <span>Items count:</span>
+                  <span id="cartCount">0</span>
+                </div>
+                <div class="summary-line total">
+                  <span>Total Amount:</span>
+                  <span id="cartTotal">$0.00</span>
+                </div>
+
+                <button class="btn-primary btn-block" id="placeOrderBtn" disabled>
+                  Submit Order to Kitchen
+                </button>
+              </div>
+            </div>
+          </div>
+        </aside>
+      </div>
+    </section>
+
+    <!-- ==================== TAB 2: ORDER MANAGEMENT ==================== -->
+    <section id="tab-orders" class="tab-pane">
+      <div class="panel-header-row">
+        <div>
+          <h2>Order Management</h2>
+          <p class="section-desc">View existing orders, review itemized breakdowns, update statuses, or delete orders.</p>
+        </div>
+        <div class="filter-controls">
+          <label>Filter Status:</label>
+          <select id="orderStatusFilter">
+            <option value="all">All Orders</option>
+            <option value="pending">Pending</option>
+            <option value="in-progress">In-Progress</option>
+            <option value="completed">Completed</option>
+            <option value="cancelled">Cancelled</option>
+          </select>
+          <button class="btn-secondary" id="refreshOrdersBtn">
+            <svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/>
+            </svg>
+            Refresh
+          </button>
+        </div>
+      </div>
+
+      <div class="orders-grid" id="ordersList">
+        <div class="loading-state">Loading orders from PostgreSQL...</div>
+      </div>
+    </section>
+
+    <!-- ==================== TAB 3: MANAGE MENU ITEMS ==================== -->
+    <section id="tab-manage-menu" class="tab-pane">
+      <div class="panel-header-row">
+        <div>
+          <h2>Manage Menu Items</h2>
+          <p class="section-desc">Create, update, and manage restaurant dishes connected to categories.</p>
+        </div>
+        <button class="btn-primary" id="openAddMenuItemModalBtn">+ Add New Menu Item</button>
+      </div>
+
+      <div class="table-container">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Food Name</th>
+              <th>Category</th>
+              <th>Description</th>
+              <th>Price</th>
+              <th>Available</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="menuManagementTableBody">
+            <tr><td colspan="7" class="loading-state">Loading dishes...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ==================== TAB 4: CATEGORIES ==================== -->
+    <section id="tab-categories" class="tab-pane">
+      <div class="panel-header-row">
+        <div>
+          <h2>Categories</h2>
+          <p class="section-desc">Group menu items into logical restaurant categories.</p>
+        </div>
+        <button class="btn-primary" id="openAddCategoryModalBtn">+ Add New Category</button>
+      </div>
+
+      <div class="categories-grid" id="categoriesCardGrid">
+        <div class="loading-state">Loading categories...</div>
+      </div>
+    </section>
+
+    <!-- ==================== TAB 5: USERS / CUSTOMERS ==================== -->
+    <section id="tab-users" class="tab-pane">
+      <div class="panel-header-row">
+        <div>
+          <h2>Customers & Staff</h2>
+          <p class="section-desc">Manage customer accounts associated with orders.</p>
+        </div>
+        <button class="btn-primary" id="openAddUserModalBtn">+ Add New Customer</button>
+      </div>
+
+      <div class="table-container">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Full Name</th>
+              <th>Email</th>
+              <th>Phone</th>
+              <th>Role</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="usersTableBody">
+            <tr><td colspan="6" class="loading-state">Loading users...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ==================== MODALS ==================== -->
+
+  <!-- Modal: Add / Edit Menu Item -->
+  <div class="modal-backdrop" id="menuItemModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3 id="menuItemModalTitle">Add Menu Item</h3>
+        <button class="modal-close" data-close="menuItemModal">&times;</button>
+      </div>
+      <form id="menuItemForm">
+        <input type="hidden" id="menuItemId">
+        <div class="form-group">
+          <label for="itemCategoryId">Category *</label>
+          <select id="itemCategoryId" required></select>
+        </div>
+        <div class="form-group">
+          <label for="itemName">Food Name *</label>
+          <input type="text" id="itemName" placeholder="e.g. Margherita Pizza" required>
+        </div>
+        <div class="form-group">
+          <label for="itemDescription">Description</label>
+          <textarea id="itemDescription" rows="2" placeholder="Ingredients, preparation details..."></textarea>
+        </div>
+        <div class="form-row">
+          <div class="form-group flex-1">
+            <label for="itemPrice">Price ($) *</label>
+            <input type="number" id="itemPrice" step="0.01" min="0" placeholder="14.99" required>
+          </div>
+          <div class="form-group flex-1 checkbox-group">
+            <label for="itemAvailable">Available for order</label>
+            <input type="checkbox" id="itemAvailable" checked>
+          </div>
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn-secondary" data-close="menuItemModal">Cancel</button>
+          <button type="submit" class="btn-primary">Save Dish</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal: Add / Edit Category -->
+  <div class="modal-backdrop" id="categoryModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3 id="categoryModalTitle">Add Category</h3>
+        <button class="modal-close" data-close="categoryModal">&times;</button>
+      </div>
+      <form id="categoryForm">
+        <input type="hidden" id="categoryId">
+        <div class="form-group">
+          <label for="categoryName">Category Name *</label>
+          <input type="text" id="categoryName" placeholder="e.g. Seafood & Grills" required>
+        </div>
+        <div class="form-group">
+          <label for="categoryDescription">Description</label>
+          <textarea id="categoryDescription" rows="2" placeholder="Description of this category..."></textarea>
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn-secondary" data-close="categoryModal">Cancel</button>
+          <button type="submit" class="btn-primary">Save Category</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal: Add / Edit User -->
+  <div class="modal-backdrop" id="userModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3 id="userModalTitle">Add Customer</h3>
+        <button class="modal-close" data-close="userModal">&times;</button>
+      </div>
+      <form id="userForm">
+        <input type="hidden" id="userId">
+        <div class="form-group">
+          <label for="userName">Full Name *</label>
+          <input type="text" id="userName" placeholder="e.g. Alex Johnson" required>
+        </div>
+        <div class="form-group">
+          <label for="userEmail">Email Address *</label>
+          <input type="email" id="userEmail" placeholder="e.g. alex@example.com" required>
+        </div>
+        <div class="form-row">
+          <div class="form-group flex-1">
+            <label for="userPhone">Phone Number</label>
+            <input type="tel" id="userPhone" placeholder="555-0199">
+          </div>
+          <div class="form-group flex-1">
+            <label for="userRole">Role</label>
+            <select id="userRole">
+              <option value="customer">Customer</option>
+              <option value="staff">Staff</option>
+              <option value="admin">Admin</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="userPassword">Password (optional, min 6 chars)</label>
+          <input type="password" id="userPassword" placeholder="Set a login password" autocomplete="new-password">
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn-secondary" data-close="userModal">Cancel</button>
+          <button type="submit" class="btn-primary">Save Customer</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal: View Order Details -->
+  <div class="modal-backdrop" id="orderDetailsModal">
+    <div class="modal modal-lg">
+      <div class="modal-header">
+        <h3 id="orderDetailsTitle">Order Details</h3>
+        <button class="modal-close" data-close="orderDetailsModal">&times;</button>
+      </div>
+      <div id="orderDetailsBody" class="order-details-content">
+        <!-- Loaded dynamically -->
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

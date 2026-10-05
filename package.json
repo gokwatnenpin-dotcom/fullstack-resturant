@@ -1,0 +1,25 @@
+{
+  "name": "restaurant-management-api",
+  "version": "1.0.0",
+  "description": "Full-Stack Restaurant Management System with Express.js and PostgreSQL",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "node --watch src/server.js",
+    "seed": "node src/database/seed.js",
+    "test": "node --test"
+  },
+  "keywords": [
+    "express",
+    "postgresql",
+    "rest-api",
+    "restaurant",
+    "fullstack"
+  ],
+  "dependencies": {
+    "cors": "^2.8.6",
+    "dotenv": "^18.0.5",
+    "express": "^4.21.0",
+    "pg": "^8.23.1"
+  }
+}
